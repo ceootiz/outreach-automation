@@ -1,0 +1,32 @@
+.env
+.venv/
+.DS_Store
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.sqlite
+*.sqlite3
+*.db
+*.log
+logs/*.log
+exports/*.xlsx
+data/
+exports/
+imports/
+logs/
+cache/
+build/
+dist/
+resources/icons/*.iconset/
+resources/icons/app_icon.icns
+!resources/icons/app_icon.png
+!resources/icons/app_icon.ico
+launchers/*.app/
+*.spec
+!packaging/**/*.spec
+Application Support/
+Gmail Рассылка/
+credentials/
+*.pem
+*.key
