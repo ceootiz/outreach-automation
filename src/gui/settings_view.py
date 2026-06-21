@@ -98,6 +98,8 @@ class SettingsView(QWidget):
         self.gmail_hint = QLabel("Добавьте несколько Gmail-профилей и выберите активный отправитель.")
         self.gmail_hint.setWordWrap(True)
         self.gmail_instruction_label = helper_text(
+            "Для Gmail используйте пароль приложения Google, а не обычный пароль аккаунта. "
+            "Его можно создать в Google Account → Security → 2-Step Verification → App passwords.\n\n"
             "Как подключить Gmail?\n"
             "1. Включите 2FA в Google Account.\n"
             "2. Создайте App Password.\n"
