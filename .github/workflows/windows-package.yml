@@ -36,8 +36,10 @@ jobs:
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:OUTREACH_AUTOMATION_DISABLE_ONBOARDING = "1"
           $env:OUTREACH_AUTOMATION_CREDENTIAL_BACKEND = "file"
-          .\.venv\Scripts\python.exe scripts\qt_doctor.py
+          $qtPlatforms = .\.venv\Scripts\python.exe -c "from PySide6.QtCore import QLibraryInfo; print(QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath))"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $qwindows = Join-Path $qtPlatforms "platforms\qwindows.dll"
+          if (-not (Test-Path $qwindows)) { throw "Qt Windows platform plugin is missing: $qwindows" }
           .\.venv\Scripts\python.exe -m pytest `
             tests\test_stage_5_1_windows_port.py `
             tests\test_stage_5_1_4_windows_gmail_credentials.py `
