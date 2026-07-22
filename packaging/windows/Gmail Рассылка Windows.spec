@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-ROOT = Path.cwd()
+ROOT = Path(SPECPATH).resolve().parents[1]
 
 excludes = [
     "PySide6.Qt3DAnimation",
@@ -51,10 +51,10 @@ excludes = [
 ]
 
 a = Analysis(
-    ["app.py"],
+    [str(ROOT / "app.py")],
     pathex=[str(ROOT)],
     binaries=[],
-    datas=[("resources/icons/app_icon.png", "resources/icons")],
+    datas=[(str(ROOT / "resources" / "icons" / "app_icon.png"), "resources/icons")],
     hiddenimports=[
         "PySide6.QtCore",
         "PySide6.QtGui",
