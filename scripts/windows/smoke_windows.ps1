@@ -29,9 +29,13 @@ $env:OUTREACH_AUTOMATION_DISABLE_ONBOARDING = "1"
 $env:OUTREACH_AUTOMATION_SMOKE_EXIT_MS = "1000"
 $env:QT_QPA_PLATFORM = ""
 
-& $ExePath
-if ($LASTEXITCODE -ne 0) {
-  throw "Windows app smoke failed with exit code $LASTEXITCODE"
+$Process = Start-Process -FilePath $ExePath -PassThru
+if (-not $Process.WaitForExit(20000)) {
+  $Process.Kill()
+  throw "Windows app smoke timed out."
+}
+if ($Process.ExitCode -ne 0) {
+  throw "Windows app smoke failed with exit code $($Process.ExitCode)"
 }
 
 foreach ($dir in @("data", "exports", "imports", "logs", "backups", "cache")) {
