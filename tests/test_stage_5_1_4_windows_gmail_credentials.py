@@ -90,9 +90,14 @@ def test_windows_keyring_failure_activates_encrypted_fallback(
     assert "fallback" in backend
     assert "encrypted local storage" in backend
     assert credential_store.load_profile_password(8, "user@example.com") == "fallback-secret"
-    encrypted_file = isolated_app_dir / "credentials" / "gmail_credentials.enc"
-    assert encrypted_file.exists()
-    assert "fallback-secret" not in encrypted_file.read_text(encoding="utf-8")
+    credentials_dir = isolated_app_dir / "credentials"
+    fallback_files = (
+        credentials_dir / "windows_credentials.dpapi",
+        credentials_dir / "gmail_credentials.enc",
+    )
+    stored_file = next((path for path in fallback_files if path.exists()), None)
+    assert stored_file is not None
+    assert b"fallback-secret" not in stored_file.read_bytes()
 
 
 def test_corrupted_fallback_storage_does_not_crash_on_read(

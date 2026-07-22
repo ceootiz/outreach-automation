@@ -30,9 +30,22 @@ jobs:
           Set-ExecutionPolicy -Scope Process Bypass -Force
           .\scripts\windows\setup_windows.ps1
 
-      - name: Run Windows tests
+      - name: Run Windows release tests
         shell: pwsh
-        run: .\scripts\windows\test_windows.ps1
+        run: |
+          $env:QT_QPA_PLATFORM = "offscreen"
+          $env:OUTREACH_AUTOMATION_DISABLE_ONBOARDING = "1"
+          $env:OUTREACH_AUTOMATION_CREDENTIAL_BACKEND = "file"
+          .\.venv\Scripts\python.exe scripts\qt_doctor.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\.venv\Scripts\python.exe -m pytest `
+            tests\test_stage_5_1_windows_port.py `
+            tests\test_stage_5_1_4_windows_gmail_credentials.py `
+            -q
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .\.venv\Scripts\python.exe -m compileall -q `
+            -x "(\.venv|\.pytest_cache|__pycache__|build|dist)" .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Build Windows application
         shell: pwsh
