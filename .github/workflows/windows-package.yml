@@ -1,0 +1,82 @@
+name: Windows package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Set up Windows environment
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -Scope Process Bypass -Force
+          .\scripts\windows\setup_windows.ps1
+
+      - name: Run Windows tests
+        shell: pwsh
+        run: .\scripts\windows\test_windows.ps1
+
+      - name: Build Windows application
+        shell: pwsh
+        run: .\scripts\windows\build_windows.ps1
+
+      - name: Package Windows ZIP
+        shell: pwsh
+        run: .\scripts\windows\package_windows.ps1 -SkipBuild
+
+      - name: Smoke packaged application
+        shell: pwsh
+        run: .\scripts\windows\smoke_windows.ps1
+
+      - name: Verify clean extraction
+        shell: pwsh
+        run: |
+          $zip = "dist\windows\Gmail Рассылка-5.1.1-windows.zip"
+          $extract = Join-Path $env:RUNNER_TEMP "outreach-windows-clean"
+          Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+          $exe = Join-Path $extract "Gmail Рассылка\Gmail Рассылка.exe"
+          if (-not (Test-Path $exe)) { throw "Extracted executable is missing." }
+          $env:QT_QPA_PLATFORM = "offscreen"
+          $env:OUTREACH_AUTOMATION_APP_DIR = Join-Path $env:RUNNER_TEMP "outreach-windows-clean-data"
+          $env:OUTREACH_AUTOMATION_CREDENTIAL_BACKEND = "file"
+          $env:OUTREACH_AUTOMATION_DISABLE_ONBOARDING = "1"
+          $env:OUTREACH_AUTOMATION_SMOKE_EXIT_MS = "1000"
+          $process = Start-Process -FilePath $exe -PassThru
+          if (-not $process.WaitForExit(20000)) {
+            $process.Kill()
+            throw "Extracted application did not exit after smoke timeout."
+          }
+          if ($process.ExitCode -ne 0) { throw "Extracted application exited with code $($process.ExitCode)." }
+
+      - name: Audit release package
+        shell: pwsh
+        run: |
+          .\.venv\Scripts\python.exe scripts\release\validate_release.py `
+            --windows-zip "dist\windows\Gmail Рассылка-5.1.1-windows.zip" `
+            --allow-missing-macos `
+            --smoke-status passed
+
+      - name: Upload Windows release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gmail-rassylka-5.1.1-windows
+          path: |
+            dist/windows/Gmail Рассылка-5.1.1-windows.zip
+            dist/windows/Gmail Рассылка-5.1.1-windows.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
