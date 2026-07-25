@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 import sqlite3
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -61,7 +62,7 @@ def check_database_integrity(db_path: Path) -> DatabaseCheckResult:
     if not db_path.exists():
         return DatabaseCheckResult(True, "database missing; will initialize")
     try:
-        with sqlite3.connect(db_path) as conn:
+        with closing(sqlite3.connect(db_path)) as conn:
             row = conn.execute("PRAGMA integrity_check").fetchone()
     except sqlite3.DatabaseError as exc:
         return DatabaseCheckResult(False, f"database open failed: {exc}")

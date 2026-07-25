@@ -36,22 +36,7 @@ jobs:
 
       - name: Run Windows release tests
         shell: pwsh
-        run: |
-          $env:QT_QPA_PLATFORM = "offscreen"
-          $env:OUTREACH_AUTOMATION_DISABLE_ONBOARDING = "1"
-          $env:OUTREACH_AUTOMATION_CREDENTIAL_BACKEND = "file"
-          $qtPlatforms = .\.venv\Scripts\python.exe -c "from PySide6.QtCore import QLibraryInfo; print(QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath))"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $qwindows = Join-Path $qtPlatforms "platforms\qwindows.dll"
-          if (-not (Test-Path $qwindows)) { throw "Qt Windows platform plugin is missing: $qwindows" }
-          .\.venv\Scripts\python.exe -m pytest `
-            tests\test_stage_5_1_windows_port.py `
-            tests\test_stage_5_1_4_windows_gmail_credentials.py `
-            -q
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          .\.venv\Scripts\python.exe -m compileall -q `
-            -x "(\.venv|\.pytest_cache|__pycache__|build|dist)" .
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        run: .\scripts\windows\test_windows.ps1
 
       - name: Build Windows application
         shell: pwsh
